@@ -16,11 +16,11 @@ function fetchXMLData(url) {
         const id = safeTextContent(position.getElementsByTagName('id'));
         const department = safeTextContent(position.getElementsByTagName('department')); // Themenbereich
         const title = safeTextContent(position.getElementsByTagName('name'));
-        const schedule = safeTextContent(position.getElementsByTagName('schedule')); // Type
+        const seniority = safeTextContent(position.getElementsByTagName('seniority')); // Type
         const location = safeTextContent(position.getElementsByTagName('office')); // Standort
 
         // Skip adding job if mandatory fields are missing
-        if (!id || !department || !title || !schedule || !location) {
+        if (!id || !department || !title || !seniority || !location) {
             continue;
         }
 
@@ -30,7 +30,7 @@ function fetchXMLData(url) {
         }
 
         // Add job to the category
-        categories[department].push({ id, title, schedule, location });
+        categories[department].push({ id, title, seniority, location });
     }
 
     return categories;
@@ -44,23 +44,18 @@ function fetchXMLData(url) {
     for (let category in categories) {
       html += `<div class="accordion-item-content">
         ${categories[category].map(job => `
-          <a p_job-link href="https://twaice.jobs.personio.com/job/${job.id}?language=de&display=en" class="accordion_list w-inline-block">
+          <a p_job-link href="https://statworx.jobs.personio.de/job/${job.id}?language=de&display=de" class="accordion_list w-inline-block">
             <div>
               <h4 p_job-title class="heading-small text-weight-normal">${job.title}</h4>
             </div>
             <div class="accordion_list-job">
               <div class="accordion_list-inner">
-                <div p_themenbereich class="text-size-small">${category}</div>
-                <div class="text-size-small">,</div>
-                <div p_type-of-employment class="text-size-small is-fest">${job.schedule}</div>
-                <div class="text-size-small">,</div>
-                <div p_location class="text-size-small is-job">${job.location}</div>
+                <div p_themenbereich class="case_tag">${category}</div>
+                <div p_type-of-employment class="case_tag">${job.seniority}</div>
+                <div p_location class="case_tag">${job.location}</div>
               </div>
-              <div class="icon-embed-xsmall w-embed">
-                <svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" viewBox="0 0 24 25" fill="none" preserveAspectRatio="xMidYMid meet" aria-hidden="true" role="img">
-                  <path fill-rule="evenodd" clip-rule="evenodd" d="M23.251 12.3826C23.251 6.16936 18.2142 1.13257 12.001 1.13257C5.78777 1.13257 0.750977 6.16936 0.750977 12.3826C0.750977 18.5958 5.78777 23.6326 12.001 23.6326C18.2142 23.6326 23.251 18.5958 23.251 12.3826Z" fill="#1562FC"></path>
-                  <path fill-rule="evenodd" clip-rule="evenodd" d="M17.1941 12.0955C17.1575 12.007 17.1032 11.9241 17.0313 11.8522L13.2813 8.10224C12.9884 7.80935 12.5135 7.80935 12.2206 8.10224C11.9278 8.39513 11.9278 8.87001 12.2206 9.1629L14.6903 11.6326H7.50098C7.08676 11.6326 6.75098 11.9684 6.75098 12.3826C6.75098 12.7968 7.08676 13.1326 7.50098 13.1326H14.6903L12.2206 15.6022C11.9278 15.8951 11.9278 16.37 12.2206 16.6629C12.5135 16.9558 12.9884 16.9558 13.2813 16.6629L17.0313 12.9129C17.1778 12.7665 17.251 12.5745 17.251 12.3826C17.251 12.2809 17.2307 12.1839 17.1941 12.0955Z" fill="white"></path>
-                </svg>
+              <div class="arrow_holder">
+                <img src="https://cdn.prod.website-files.com/6708e2b8dd5532212a1db2ac/671cbab6bcd086626f9e4960_statworx-arrow_forward2.svg" loading="lazy" alt="">
               </div>
             </div>
           </a>
@@ -102,7 +97,7 @@ function populateFilters(categories) {
 
         // Collect unique types and locations
         jobs.forEach(job => {
-            types.add(job.schedule);
+            types.add(job.seniority);
             locations.add(job.location);
         });
     });
@@ -129,61 +124,36 @@ function populateFilters(categories) {
 }
   
   function applyFilters() {
-    const selectedType = document.querySelector('[p_type-of-employment]').value.trim();
+    const selectedThemenbereich = document.querySelector('[p_themenbereich-filter]').value.trim();
+    const selectedType = document.querySelector('[p_type-of-employment-filter]').value.trim();
     const selectedLocation = document.querySelector('[p_location-filter]').value.trim();
 
-    let totalVisibleJobs = 0; // Track the total number of visible jobs after filtering
+    let totalVisibleJobs = 0;
+    const jobListings = document.querySelectorAll('.accordion_list');
 
-    const allAccordions = document.querySelectorAll('.accordion-item');
-    allAccordions.forEach(accordion => {
-        let visibleJobs = 0;
+    jobListings.forEach(job => {
+        const themenbereich = job.querySelector('[p_themenbereich]').textContent.trim();
+        const type = job.querySelector('[p_type-of-employment]').textContent.trim();
+        const location = job.querySelector('[p_location]').textContent.trim();
 
-        const category = accordion.querySelector('[p_type-of-employment-text]').textContent.trim();
-        const jobs = accordion.querySelectorAll('.accordion_list');
-
-        jobs.forEach(job => {
-            const jobLocation = job.querySelector('[p_location-filter-text]').textContent.trim();
-
-            if ((selectedType === '' || category.toLowerCase() === selectedType.toLowerCase()) && 
-                (selectedLocation === '' || jobLocation.toLowerCase().includes(selectedLocation.toLowerCase()))) {
-                job.style.display = '';
-                visibleJobs++;
-            } else {
-                job.style.display = 'none';
-            }
-        });
-
-        // Update accordion visibility, job counts, and toggle is-open classes based on visibility
-        accordion.style.display = visibleJobs > 0 ? '' : 'none';
-        const jobCountDiv = accordion.querySelector('.quantity_wrapper div');
-        jobCountDiv.textContent = `${visibleJobs} Jobs`;
-
-        // Toggle is-open class based on if jobs are visible or not
-        const trigger = accordion.querySelector('.accordion-item-trigger');
-        const content = accordion.querySelector('.accordion-item-content');
-        const icon = accordion.querySelector('.icon-embed-xsmall');
-
-        if (visibleJobs > 0) {
-            // Ensure accordion is marked as open
-            if(trigger && !trigger.classList.contains('is-open')) trigger.classList.add('is-open');
-            if(content && !content.classList.contains('is-open')) content.classList.add('is-open');
-            if(icon && !icon.classList.contains('is-open')) icon.classList.add('is-open');
+        if ((selectedThemenbereich === '' || themenbereich === selectedThemenbereich) &&
+            (selectedType === '' || type === selectedType) &&
+            (selectedLocation === '' || location === selectedLocation)) {
+            job.style.display = '';
+            totalVisibleJobs++;
         } else {
-            // Ensure accordion is marked as closed
-            if(trigger && trigger.classList.contains('is-open')) trigger.classList.remove('is-open');
-            if(content && content.classList.contains('is-open')) content.classList.remove('is-open');
-            if(icon && icon.classList.contains('is-open')) icon.classList.remove('is-open');
+            job.style.display = 'none';
         }
-
-        totalVisibleJobs += visibleJobs; // Update the total count of visible jobs
     });
 
-    // Display the "No results found" message if there are no visible jobs after filtering
+    // Show/hide the "No results found" message
     const noResultsDiv = document.querySelector('.no_reults-found');
-    if (totalVisibleJobs === 0) {
-        noResultsDiv.style.display = 'block';
-    } else {
-        noResultsDiv.style.display = 'none';
+    if (noResultsDiv) {
+        if (totalVisibleJobs === 0) {
+            noResultsDiv.classList.remove('hide');
+        } else {
+            noResultsDiv.classList.add('hide');
+        }
     }
 }
 
@@ -192,14 +162,14 @@ function populateFilters(categories) {
   
   
   document.addEventListener('DOMContentLoaded', () => {
-    // Add event listeners for both filters
-    const typeSelectField = document.querySelector('[p_type-of-employment]');
-    const locationSelectField = document.querySelector('[p_location-filter]');
+    // Add event listeners for all filters
+    const themenbereichSelect = document.querySelector('[p_themenbereich-filter]');
+    const typeSelect = document.querySelector('[p_type-of-employment-filter]');
+    const locationSelect = document.querySelector('[p_location-filter]');
   
-    if (typeSelectField && locationSelectField) {
-      typeSelectField.addEventListener('change', applyFilters);
-      locationSelectField.addEventListener('change', applyFilters);
-    }
+    if (themenbereichSelect) themenbereichSelect.addEventListener('change', applyFilters);
+    if (typeSelect) typeSelect.addEventListener('change', applyFilters);
+    if (locationSelect) locationSelect.addEventListener('change', applyFilters);
   
     // Fetch and process the XML, then populate the select fields and insert HTML into the DOM
     fetchXMLData('https://statworx.jobs.personio.com/xml')
