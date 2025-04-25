@@ -40,11 +40,15 @@ function fetchXMLData(url) {
   // This function generates HTML for the categories
   function generateHTMLForCategories(categories) {
     let html = '';
+    
+    // Check if we're on the English version of the page
+    const isEnglishVersion = window.location.pathname.includes('/en/');
+    const displayLanguage = isEnglishVersion ? 'en' : 'de';
   
     for (let category in categories) {
       html += `<div class="accordion-item-content">
         ${categories[category].map(job => `
-          <a p_job-link href="https://statworx.jobs.personio.de/job/${job.id}?language=de&display=de" class="accordion_list w-inline-block">
+          <a p_job-link href="https://statworx.jobs.personio.de/job/${job.id}?language=de&display=${displayLanguage}" class="accordion_list w-inline-block">
             <div>
               <h4 p_job-title class="heading-small text-weight-normal">${job.title}</h4>
             </div>
