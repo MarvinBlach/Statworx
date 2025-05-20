@@ -48,7 +48,7 @@ function fetchXMLData(url) {
     for (let category in categories) {
       html += `<div class="accordion-item-content">
         ${categories[category].map(job => `
-          <a p_job-link href="https://statworx.jobs.personio.de/job/${job.id}?language=de&display=${displayLanguage}" class="accordion_list w-inline-block">
+          <a p_job-link href="https://statworx.jobs.personio.de/job/${job.id}?language=en&display=${displayLanguage}" class="accordion_list w-inline-block">
             <div>
               <h4 p_job-title class="heading-small text-weight-normal">${job.title}</h4>
             </div>
